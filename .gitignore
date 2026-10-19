@@ -1,0 +1,23 @@
+# 运行时与本地环境产物
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+
+# 监控运行时文件（与具体机器绑定，不入库）
+monitor.log
+known_hosts
+previous-host-samples-*.json
+*.csv
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 虚拟环境
+.venv/
+venv/
+env/

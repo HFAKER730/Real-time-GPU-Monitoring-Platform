@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GPU 实时监控 · 192.168.1.100</title>
+<style>
+:root{color-scheme:dark;--bg:#0a1018;--panel:#111b27;--line:#263444;--text:#e8eef6;--muted:#94a7bb;--mint:#63e6b1;--blue:#72baff;--amber:#ffc878;--orange:#ffb86b;--purple:#b78cff;--red:#ff7a7a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 "Segoe UI","Microsoft YaHei",sans-serif}button,select{font:inherit}button:focus-visible,select:focus-visible,canvas:focus-visible{outline:2px solid var(--mint);outline-offset:4px}main{max-width:1200px;padding:36px 32px 24px;margin:auto}header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:30px}.eyebrow{color:var(--mint);font-size:11px;letter-spacing:2.6px;font-weight:600}h1{font-size:28px;letter-spacing:-.7px;margin:5px 0 4px;font-weight:600}.subtitle{color:var(--muted);font-size:13px}header>div{min-width:0}.status{border:1px solid var(--line);border-radius:30px;padding:8px 13px;white-space:nowrap;font-size:12px;display:flex;align-items:center;gap:8px;flex-shrink:0}.dot{height:7px;width:7px;background:var(--amber);border-radius:50%}.status.live .dot{background:var(--mint)}.status.live{color:var(--mint)}.status.warn{color:var(--amber)}.cards{display:grid;grid-template-columns:1fr 1.3fr .75fr .75fr;gap:14px;margin-bottom:24px}.card{border:1px solid var(--line);border-radius:15px;padding:19px 20px;background:var(--panel);min-width:0}.label{color:var(--muted);font-size:12px;display:flex;gap:8px;align-items:center}.swatch{width:7px;height:7px;display:inline-block;border-radius:2px;background:var(--mint)}.swatch.blue{background:var(--blue)}.swatch.orange{background:var(--orange)}.swatch.purple{background:var(--purple)}.number{font-size:35px;font-weight:550;letter-spacing:-1px;line-height:1.3;margin-top:9px;font-variant-numeric:tabular-nums}.unit{font-size:15px;font-weight:400;letter-spacing:0;color:var(--muted);margin-left:5px}.detail{font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted);margin-top:5px;min-height:19px}.meter{height:4px;margin-top:13px;background:#233345;border-radius:4px;overflow:hidden}.meter>div{height:100%;width:0;background:var(--mint);transition:width .4s}.meter.blue>div{background:var(--blue)}.card.hot .number{color:var(--orange)}.card.crit .number{color:var(--red)}.card.crit .meter>div{background:var(--red)}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:26px 0 14px}.toolbar h2{font-size:16px;font-weight:500;margin:0}.controls{display:flex;gap:9px;align-items:center}select,button{color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 11px;background:var(--panel);cursor:pointer;font-size:12px}button:hover{border-color:var(--muted)}button[aria-pressed=true]{color:var(--amber)}.chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:18px 20px 6px;margin-bottom:14px}.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.chart-grid .chart-panel{margin-bottom:0}.chart-title{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px}.chart-stat{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}.chart-wrap{position:relative;height:224px;margin-top:12px}.chart-wrap.sm{height:196px}canvas{width:100%;height:100%;display:block;touch-action:pan-y}.tooltip{position:absolute;display:none;background:#1c2d3f;border:1px solid #425670;border-radius:8px;padding:9px 12px;font-size:12px;pointer-events:none;z-index:3;box-shadow:0 6px 24px #0006;white-space:nowrap;font-variant-numeric:tabular-nums}.tooltip b{font-weight:550}.foot{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:11px;margin-top:19px}.foot span{overflow-wrap:anywhere}.foot span:last-child{text-align:right}.notice{display:none;padding:11px 15px;margin-bottom:18px;border:1px solid #76613b;border-radius:9px;color:var(--amber);background:#2a2419;font-size:13px;white-space:pre-line}.notice.show{display:block}.notice.crit{border-color:#8a4444;color:var(--red);background:#2c1919}.stale .number{opacity:.55}.sr{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:800px){main{padding:24px 18px}.cards{grid-template-columns:1fr 1fr}.card{padding:17px}.number{font-size:30px}.chart-wrap{height:205px}.chart-grid{grid-template-columns:1fr}.chart-wrap.sm{height:200px}.foot{flex-direction:column}.foot span:last-child{text-align:left}}
+@media(max-width:450px){header{align-items:flex-start;gap:8px}h1{font-size:23px}.status{padding:6px 9px}.subtitle{font-size:11px}.toolbar{flex-wrap:wrap}.chart-panel{padding:15px 12px 5px}.chart-title{flex-wrap:wrap;gap:4px}.chart-stat{width:100%;text-align:right;font-size:10px}.number{font-size:29px}.detail{font-size:11px}.card{padding:14px}.cards{gap:10px}.chart-wrap{height:196px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header><div><div class="eyebrow">GPU TELEMETRY</div><h1>GPU 实时监控</h1><div class="subtitle"><span id="gpu-name">正在读取显卡信息</span> <span aria-hidden="true">/</span> <span id="host-addr">192.168.1.100</span></div></div><div id="status" class="status"><span class="dot"></span><span id="status-text" role="status">正在连接</span></div></header>
+<div id="notice" class="notice" role="alert"></div>
+<section class="cards" aria-label="最新采样" id="cards">
+<div class="card"><div class="label"><span class="swatch"></span>GPU 利用率</div><div class="number"><span id="gpu-value">—</span><span class="unit">%</span></div><div class="detail" id="recent">等待真实采样</div><div class="meter"><div id="gpu-meter"></div></div></div>
+<div class="card" id="memory-card"><div class="label"><span class="swatch blue"></span>显存占用</div><div class="number"><span id="memory-value">—</span><span class="unit">%</span></div><div class="detail" id="memory-detail">— / — MiB</div><div class="meter blue"><div id="memory-meter"></div></div></div>
+<div class="card" id="temp-card"><div class="label"><span class="swatch orange"></span>GPU 温度</div><div class="number"><span id="temp-value">—</span><span class="unit">°C</span></div><div class="detail" id="temp-detail">当前传感器读数</div></div>
+<div class="card"><div class="label"><span class="swatch purple"></span>GPU 功耗</div><div class="number"><span id="power-value">—</span><span class="unit">W</span></div><div class="detail" id="power-detail">当前板卡功耗</div></div>
+</section>
+<div class="toolbar"><h2>实时趋势</h2><div class="controls"><label for="window" class="sr">曲线时间范围</label><select id="window"><option value="300">最近 5 分钟</option><option value="900">最近 15 分钟</option><option value="3600">最近 60 分钟</option></select><button type="button" id="export">导出 CSV</button><button type="button" id="pause" aria-pressed="false">暂停画面</button></div></div>
+<section class="chart-panel"><div class="chart-title"><span><span class="swatch"></span> GPU 利用率 <span class="subtitle">/ %</span></span><span class="chart-stat" id="gpu-stats">等待采样</span></div><div class="chart-wrap"><canvas id="gpu-chart" role="img" aria-label="GPU 利用率实时曲线，横轴为时间，纵轴为百分比"></canvas><div id="gpu-tip" class="tooltip"></div></div></section>
+<section class="chart-panel"><div class="chart-title"><span><span class="swatch blue"></span> 显存占用 <span class="subtitle">/ MiB</span></span><span class="chart-stat" id="memory-stats">等待采样</span></div><div class="chart-wrap"><canvas id="memory-chart" role="img" aria-label="显存占用实时曲线，横轴为时间，纵轴为 MiB"></canvas><div id="memory-tip" class="tooltip"></div></div></section>
+<div class="chart-grid">
+<section class="chart-panel"><div class="chart-title"><span><span class="swatch orange"></span> GPU 温度 <span class="subtitle">/ °C</span></span><span class="chart-stat" id="temp-stats">等待采样</span></div><div class="chart-wrap sm"><canvas id="temp-chart" role="img" aria-label="GPU 温度实时曲线，横轴为时间，纵轴为摄氏度"></canvas><div id="temp-tip" class="tooltip"></div></div></section>
+<section class="chart-panel"><div class="chart-title"><span><span class="swatch purple"></span> GPU 功耗 <span class="subtitle">/ W</span></span><span class="chart-stat" id="power-stats">等待采样</span></div><div class="chart-wrap sm"><canvas id="power-chart" role="img" aria-label="GPU 功耗实时曲线，横轴为时间，纵轴为瓦"></canvas><div id="power-tip" class="tooltip"></div></div></section>
+</div>
+<footer class="foot"><span id="sampling-info">每 2 秒采样 · 本次会话保留最近 60 分钟</span><span id="updated">等待首个样本</span></footer>
+</main>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const fmt = new Intl.NumberFormat('en-US', {maximumFractionDigits:0});
+  const time = t => new Date(t * 1000).toLocaleTimeString('zh-CN', {hour12:false});
+  let data = null, shown = null, paused = false, windowSeconds = 300, apiDown = false;
+  const DEFAULT_TH = {temp_warn:80, temp_crit:87, memory_warn_percent:95};
+  const plots = [
+    {canvas:$('gpu-chart'), tip:$('gpu-tip'), key:'utilization', color:'#63e6b1', unit:'%', label:'GPU 利用率', hover:null,
+     maxY: () => 100, lines: []},
+    {canvas:$('memory-chart'), tip:$('memory-tip'), key:'memory_used', color:'#72baff', unit:'MiB', label:'显存占用', hover:null,
+     maxY: vis => niceMax(Math.max(2048, data?.latest?.memory_total || 0, ...vis.map(s => s.memory_total)) * 1.06), lines: []},
+    {canvas:$('temp-chart'), tip:$('temp-tip'), key:'temperature', color:'#ffb86b', unit:'°C', label:'GPU 温度', hover:null,
+     maxY: vis => {const th = thresholds();
+       return niceMax(Math.max(50, ...vis.map(s => s.temperature || 0), th.temp_crit + 3));},
+     lines: () => {const th = thresholds();
+       return [{value:th.temp_warn, color:'#ffc878'}, {value:th.temp_crit, color:'#ff7a7a'}];}},
+    {canvas:$('power-chart'), tip:$('power-tip'), key:'power', color:'#b78cff', unit:'W', label:'GPU 功耗', hover:null,
+     maxY: vis => {const limit = data?.latest?.power_limit;
+       return niceMax(Math.max(50, limit ? limit * 1.05 : 0, ...vis.map(s => s.power || 0)) * 1.08);}, lines: []},
+  ];
+  const thresholds = () => data?.config?.thresholds || DEFAULT_TH;
+  function niceMax(v) {
+    if (!(v > 0) || !isFinite(v)) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p;
+    const f = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5
+      : n <= 3 ? 3 : n <= 4 ? 4 : n <= 5 ? 5 : 10;
+    return f * p;
+  }
+  function draw(plot, samples, now) {
+    const canvas = plot.canvas, width = canvas.clientWidth, height = canvas.clientHeight;
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
+    const c = canvas.getContext('2d'); c.scale(ratio, ratio);
+    const m = {left:58, right:16, top:14, bottom:35};
+    const w = width - m.left - m.right, h = height - m.top - m.bottom;
+    const start = now - windowSeconds;
+    const visible = samples.filter(s => s.time >= start && s.time <= now);
+    const maxY = plot.maxY(visible);
+    const x = t => m.left + (t-start) / windowSeconds * w;
+    const y = n => m.top + (1 - n / maxY) * h;
+    plot.geom = {x, y, start, m, w, h};
+    c.font = '11px "Segoe UI", "Microsoft YaHei", sans-serif';
+    c.lineWidth = 1; c.textBaseline = 'middle';
+    for (let i = 0; i <= 4; i++) {
+      const value = maxY * i / 4, yy = y(value);
+      c.strokeStyle = '#29394a'; c.beginPath(); c.moveTo(m.left, yy); c.lineTo(width-m.right, yy); c.stroke();
+      c.fillStyle = '#94a7bb'; c.textAlign = 'right'; c.fillText(fmt.format(value), m.left-11, yy);
+    }
+    const lines = typeof plot.lines === 'function' ? plot.lines() : plot.lines;
+    for (const t of lines) {
+      if (t.value < 0 || t.value > maxY) continue;
+      const yy = y(t.value);
+      c.save(); c.strokeStyle = t.color; c.lineWidth = 1; c.setLineDash([5,4]);
+      c.beginPath(); c.moveTo(m.left, yy); c.lineTo(width-m.right, yy); c.stroke(); c.restore();
+      c.fillStyle = t.color; c.textAlign = 'right'; c.fillText(fmt.format(t.value), width-m.right, yy-8);
+    }
+    const ticks = width < 500 ? 3 : 5;
+    for (let i=0;i<ticks;i++) {
+      const t = start + windowSeconds * i / (ticks-1), xx=x(t);
+      c.fillStyle='#94a7bb'; c.textAlign=i===0?'left':i===ticks-1?'right':'center';
+      c.fillText(time(t), xx, height-15);
+    }
+    const groups=[];
+    for(const s of visible){
+      let g=groups[groups.length-1], prev=g && g[g.length-1];
+      if(!prev || s.segment!==prev.segment || s.time-prev.time>7){g=[];groups.push(g)}
+      g.push(s);
+    }
+    c.save(); c.beginPath(); c.rect(m.left-3,m.top-3,w+6,h+6);c.clip();
+    for(const g of groups){
+      c.beginPath();g.forEach((s,i)=>i?c.lineTo(x(s.time),y(s[plot.key])):c.moveTo(x(s.time),y(s[plot.key])));
+      c.lineTo(x(g[g.length-1].time),y(0));c.lineTo(x(g[0].time),y(0));c.closePath();
+      const grad=c.createLinearGradient(0,m.top,0,m.top+h);grad.addColorStop(0,plot.color+'28');grad.addColorStop(1,plot.color+'02');
+      c.fillStyle=grad;c.fill();c.beginPath();g.forEach((s,i)=>i?c.lineTo(x(s.time),y(s[plot.key])):c.moveTo(x(s.time),y(s[plot.key])));
+      c.strokeStyle=plot.color;c.lineWidth=1.8;c.lineJoin='round';c.stroke();
+      if(g.length===1){c.beginPath();c.arc(x(g[0].time),y(g[0][plot.key]),2.5,0,Math.PI*2);c.fillStyle=plot.color;c.fill()}
+    }
+    if(visible.length){const last=visible[visible.length-1];c.beginPath();c.arc(x(last.time),y(last[plot.key]),3,0,2*Math.PI);c.fillStyle=plot.color;c.fill()}
+    c.restore(); plot.tip.style.display='none';
+    if(!visible.length){c.textAlign='center';c.fillStyle='#94a7bb';c.fillText(samples.length?'此时间段暂无样本':'正在等待第一条真实采样…',m.left+w/2,m.top+h/2)}
+    if(plot.hover!==null && visible.length){
+      const s=visible.reduce((a,b)=>Math.abs(a.time-plot.hover)<Math.abs(b.time-plot.hover)?a:b);
+      if(Math.abs(s.time-plot.hover)<Math.max(3,windowSeconds/w*10)){
+        const xx=x(s.time), yy=y(s[plot.key]);
+        c.strokeStyle='#90a6bc';c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();c.moveTo(xx,m.top);c.lineTo(xx,m.top+h);c.stroke();c.setLineDash([]);
+        c.fillStyle=plot.color;c.beginPath();c.arc(xx,yy,4,0,2*Math.PI);c.fill();
+        plot.tip.innerHTML=time(s.time)+'<br><b>'+plot.label+' '+fmt.format(s[plot.key])+' '+plot.unit+'</b>';
+        plot.tip.style.display='block';
+        plot.tip.style.left=Math.max(2,Math.min(width-plot.tip.offsetWidth-4,xx+13))+'px';
+        plot.tip.style.top=Math.max(0,Math.min(height-plot.tip.offsetHeight-2,yy-55))+'px';
+      }
+    }
+    canvas.setAttribute('aria-label',plot.label+'曲线，最近 '+windowSeconds/60+' 分钟，当前 '+(visible.length?fmt.format(visible[visible.length-1][plot.key])+' '+plot.unit:'暂无样本'));
+    return visible;
+  }
+  function statsText(vis, key, unit) {
+    if(!vis.length) return '暂无样本';
+    const avg = vis.reduce((n,s)=>n+(s[key] || 0),0)/vis.length;
+    const peak = Math.max(...vis.map(s=>s[key] || 0));
+    return '均值 '+fmt.format(avg)+' '+unit+' · 峰值 '+fmt.format(peak)+' '+unit;
+  }
+  function render() {
+    const current=shown || data;
+    const now=paused && shown ? shown.server_time : Date.now()/1000;
+    const latest=current?.latest, samples=current?.samples || [];
+    const cfg=current?.config || {};
+    const interval=cfg.interval || 2;
+    const fresh=Boolean(data?.latest && now-data.latest.time<interval*4 && data.status==='live' && !apiDown);
+    let status=apiDown?'本地服务断开':data?.status==='auth_error'?'登录失败':data?.status==='host_key_error'?'主机校验失败':fresh?'实时采集中':data?.latest?'采样已中断':'正在连接';
+    if(paused && fresh)status='画面已暂停';
+    $('status-text').textContent=status;$('status').className='status '+(fresh&&!paused?'live':'warn');
+    $('cards').classList.toggle('stale',!fresh || paused);
+    const connMsg=apiDown?'本地采集服务不可用。显示的是上次数据，请重新启动监控。':!fresh && data?.latest?(data.error || '暂未收到新样本，曲线保留上次数据，正在等待连接恢复。'):data?.error || (paused?'画面已暂停，后台仍持续采样。点击“恢复实时”查看最新数据。':'');
+    const th=thresholds(); const alerts=[];
+    if(latest){
+      if(latest.temperature!==null && latest.temperature>=th.temp_crit){alerts.push({level:'crit', text:'GPU 温度 '+fmt.format(latest.temperature)+'°C，已超过危险阈值 '+th.temp_crit+'°C，请检查散热或降低负载。'});}
+      else if(latest.temperature!==null && latest.temperature>=th.temp_warn){alerts.push({level:'warn', text:'GPU 温度 '+fmt.format(latest.temperature)+'°C，超过告警阈值 '+th.temp_warn+'°C，请注意散热。'});}
+      if(latest.memory_percent>=th.memory_warn_percent){alerts.push({level:'warn', text:'显存占用已达 '+latest.memory_percent.toFixed(1)+'%，接近显存上限。'});}
+    }
+    let notice=connMsg, crit=false;
+    for(const a of alerts){notice+=(notice?'\n':'')+a.text;if(a.level==='crit')crit=true;}
+    $('notice').textContent=notice;$('notice').classList.toggle('show',Boolean(notice));$('notice').classList.toggle('crit',crit);
+    if(latest){
+      $('gpu-name').textContent=latest.name;
+      $('gpu-value').textContent=fmt.format(latest.utilization);$('gpu-meter').style.width=latest.utilization+'%';
+      $('memory-value').textContent=latest.memory_percent.toFixed(1);$('memory-meter').style.width=latest.memory_percent+'%';
+      $('memory-detail').textContent=fmt.format(latest.memory_used)+' / '+fmt.format(latest.memory_total)+' MiB';
+      $('memory-card').classList.toggle('hot', latest.memory_percent>=th.memory_warn_percent);
+      $('temp-value').textContent=latest.temperature===null?'—':fmt.format(latest.temperature);
+      $('temp-detail').textContent='告警阈值 '+th.temp_warn+'°C · 危险阈值 '+th.temp_crit+'°C';
+      $('temp-card').className='card'+(latest.temperature===null?'':latest.temperature>=th.temp_crit?' crit':latest.temperature>=th.temp_warn?' hot':'');
+      $('power-value').textContent=latest.power===null?'—':fmt.format(latest.power);
+      $('power-detail').textContent=latest.power_limit?('功耗上限 '+fmt.format(latest.power_limit)+' W · 当前板卡功耗'):'当前板卡功耗';
+      $('recent').textContent=samples.slice(-3).map(s=>fmt.format(s.utilization)+'%').join(' → ');
+      $('updated').textContent=(paused?'画面采样时间 ':'最后采样 ')+time(latest.time)+' · '+(fresh?'每 '+interval+' 秒更新':Math.max(0,Math.floor(Date.now()/1000-latest.time))+' 秒前');
+      let info='每 '+interval+' 秒采样 · 已采集 '+fmt.format(current.sequence)+' 个样本 · 保留最近 '+(cfg.history_minutes||60)+' 分钟';
+      if(current.fingerprint) info+=' · 主机密钥 '+current.fingerprint.slice(0,17)+'…';
+      $('sampling-info').textContent=info;
+    }
+    if(cfg.host){$('host-addr').textContent=cfg.host;document.title='GPU 实时监控 · '+cfg.host;}
+    for(const plot of plots){
+      const vis=draw(plot,samples,now);
+      const statEl=$(plot.key === 'memory_used' ? 'memory-stats'
+        : plot.key === 'utilization' ? 'gpu-stats'
+        : plot.key === 'temperature' ? 'temp-stats' : 'power-stats');
+      statEl.textContent = plot.key === 'utilization'
+        ? (vis.length ? '均值 '+(vis.reduce((n,s)=>n+s.utilization,0)/vis.length).toFixed(1)+'% · 峰值 '+Math.max(...vis.map(s=>s.utilization))+'%' : '暂无样本')
+        : statsText(vis, plot.key, plot.unit);
+    }
+  }
+  async function poll(){
+    try{const r=await fetch('/api/samples',{cache:'no-store',signal:AbortSignal.timeout(5000)});if(!r.ok)throw new Error('HTTP '+r.status);data=await r.json();apiDown=false;if(!paused)shown=data}
+    catch(_){apiDown=true}
+    render();setTimeout(poll,2000);
+  }
+  $('window').addEventListener('change',e=>{windowSeconds=Number(e.target.value);render()});
+  $('pause').addEventListener('click',()=>{paused=!paused;if(!paused)shown=data;$('pause').textContent=paused?'恢复实时':'暂停画面';$('pause').setAttribute('aria-pressed',String(paused));render()});
+  $('export').addEventListener('click', async ()=>{
+    try{
+      const r=await fetch('/api/export.csv',{cache:'no-store',signal:AbortSignal.timeout(5000)});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const blob=await r.blob(), a=document.createElement('a'), d=new Date();
+      const pad=n=>String(n).padStart(2,'0');
+      a.download='gpu-samples-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+'.csv';
+      a.href=URL.createObjectURL(blob);
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    }catch(_){}
+  });
+  for(const plot of plots){
+    plot.canvas.addEventListener('pointermove',e=>{const g=plot.geom;if(!g)return;const rect=plot.canvas.getBoundingClientRect();const pos=e.clientX-rect.left;plot.hover=pos<g.m.left || pos>g.m.left+g.w?null:g.start+(pos-g.m.left)/g.w*windowSeconds;render()});
+    plot.canvas.addEventListener('pointerleave',()=>{plot.hover=null;render()});
+  }
+  new ResizeObserver(()=>render()).observe(document.querySelector('main'));
+  render();poll();
+})();
+</script>
+</body>
+</html>
