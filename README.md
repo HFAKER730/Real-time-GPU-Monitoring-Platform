@@ -1,15 +1,28 @@
-# Real-time GPU Monitoring Platform
+<div align="center">
 
-> 通过 SSH 只读采样远程 NVIDIA GPU，在本机浏览器呈现实时遥测仪表盘。
+<h1 align="center">Real-time GPU Monitoring Platform</h1>
 
-[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-4B5563)]()
-[![License](https://img.shields.io/badge/License-MIT-3DA639)](LICENSE)
-[![Dependencies](https://img.shields.io/badge/Dependencies-paramiko%20only-0EA5E9)](requirements.txt)
+<p align="center">
+通过 SSH 只读采样远程 NVIDIA GPU，在本机浏览器呈现实时遥测仪表盘。
+</p>
 
-无需在远程主机安装 agent，也不需要开放额外端口：本机通过 SSH 执行 `nvidia-smi` 只读查询，把采样结果经本地 HTTP 服务推送到单页仪表盘。仪表盘仅监听 `127.0.0.1`。
+<p align="center">
+<a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python"></a>
+<a href="#"><img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-4B5563" alt="Platform"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-3DA639" alt="License"></a>
+<a href="requirements.txt"><img src="https://img.shields.io/badge/Dependencies-paramiko%20only-0EA5E9" alt="Dependencies"></a>
+</p>
 
-![GPU 实时监控仪表盘](docs/dashboard.png)
+<p align="center">
+无需在远程主机安装 agent，也不需要开放额外端口：本机通过 SSH 执行 <code>nvidia-smi</code> 只读查询，<br>
+把采样结果经本地 HTTP 服务推送到单页仪表盘。仪表盘仅监听 <code>127.0.0.1</code>。
+</p>
+
+</div>
+
+<p align="center">
+  <img src="docs/dashboard.png" alt="GPU 实时监控仪表盘" width="880">
+</p>
 
 ---
 
